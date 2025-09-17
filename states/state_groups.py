@@ -29,12 +29,16 @@ class startSG(StatesGroup):
 
 class adminSG(StatesGroup):
     start = State()
+
+    choose_malling = State()
     get_mail = State()
     get_time = State()
     get_keyboard = State()
     confirm_mail = State()
+
     deeplink_menu = State()
     deeplink_del = State()
+
     admin_menu = State()
     admin_del = State()
     admin_add = State()

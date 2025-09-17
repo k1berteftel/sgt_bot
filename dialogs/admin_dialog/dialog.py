@@ -14,7 +14,7 @@ admin_dialog = Dialog(
         Const('Админ панель'),
         Column(
             Button(Const('📊 Получить статистику'), id='get_static', on_click=getters.get_static),
-            SwitchTo(Const('🛫Сделать рассылку'), id='mailing_menu_switcher', state=adminSG.get_mail),
+            SwitchTo(Const('🛫Сделать рассылку'), id='mailing_menu_switcher', state=adminSG.choose_malling),
             SwitchTo(Const('🔗 Управление диплинками'), id='deeplinks_menu_switcher', state=adminSG.deeplink_menu),
             SwitchTo(Const('👥 Управление админами'), id='admin_menu_switcher', state=adminSG.admin_menu),
             Button(Const('📋Выгрузка базы пользователей'), id='get_users_txt', on_click=getters.get_users_txt),
@@ -88,13 +88,22 @@ admin_dialog = Dialog(
         state=adminSG.admin_del
     ),
     Window(
+        Const('Выберите где вы хотите сделать рассылку'),
+        Column(
+            SwitchTo(Const('По базе бота'), id='get_mail_switcher', state=adminSG.get_mail),
+            Button(Const('В чат'), id='chat_mail_switcher', on_click=getters.get_mail_switcher)
+        ),
+        SwitchTo(Const('Назад'), id='back', state=adminSG.start),
+        state=adminSG.choose_malling
+    ),
+    Window(
         Const('Введите сообщение которое вы хотели бы разослать\n\n<b>Предлагаемый макросы</b>:'
               '\n{name} - <em>полное имя пользователя</em>'),
         MessageInput(
             content_types=ContentType.ANY,
             func=getters.get_mail
         ),
-        SwitchTo(Const('Назад'), id='back', state=adminSG.start),
+        SwitchTo(Const('Назад'), id='back_choose_malling', state=adminSG.choose_malling),
         state=adminSG.get_mail
     ),
     Window(

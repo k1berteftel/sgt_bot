@@ -16,6 +16,9 @@ from config_data.config import load_config, Config
 from states.state_groups import startSG, adminSG
 
 
+config: Config = load_config()
+
+
 async def get_static(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
     session: DataInteraction = dialog_manager.middleware_data.get('session')
     users = await session.get_users()
@@ -136,6 +139,11 @@ async def admin_menu_getter(dialog_manager: DialogManager, **kwargs):
     return {'admins': text}
 
 
+async def get_mail_switcher(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
+    dialog_manager.dialog_data['chat'] = True
+    await dialog_manager.switch_to(adminSG.get_mail)
+
+
 async def get_mail(msg: Message, widget: MessageInput, dialog_manager: DialogManager):
     if msg.text:
         dialog_manager.dialog_data['text'] = msg.text
@@ -184,33 +192,19 @@ async def start_malling(clb: CallbackQuery, widget: Button, dialog_manager: Dial
     scheduler: AsyncIOScheduler = dialog_manager.middleware_data.get('scheduler')
     time = dialog_manager.dialog_data.get('time')
     keyboard = dialog_manager.dialog_data.get('keyboard')
+    is_chat = dialog_manager.dialog_data.get('chat')
     if keyboard:
         keyboard = [InlineKeyboardButton(text=i[0], url=i[1]) for i in keyboard]
     users = await session.get_users()
     if not time:
         if dialog_manager.dialog_data.get('text'):
             text: str = dialog_manager.dialog_data.get('text')
-            for user in users:
-                try:
-                    await bot.send_message(
-                        chat_id=user.user_id,
-                        text=text.format(name=user.name),
-                        reply_markup=InlineKeyboardMarkup(inline_keyboard=[keyboard]) if keyboard else None
-                    )
-                    if user.active == 0:
-                        await session.set_active(user.user_id, 1)
-                except Exception as err:
-                    print(err)
-                    await session.set_active(user.user_id, 0)
-        elif dialog_manager.dialog_data.get('caption'):
-            caption: str = dialog_manager.dialog_data.get('caption')
-            if dialog_manager.dialog_data.get('photo'):
+            if not is_chat:
                 for user in users:
                     try:
-                        await bot.send_photo(
+                        await bot.send_message(
                             chat_id=user.user_id,
-                            photo=dialog_manager.dialog_data.get('photo'),
-                            caption=caption.format(name=user.name),
+                            text=text.format(name=user.name),
                             reply_markup=InlineKeyboardMarkup(inline_keyboard=[keyboard]) if keyboard else None
                         )
                         if user.active == 0:
@@ -219,19 +213,77 @@ async def start_malling(clb: CallbackQuery, widget: Button, dialog_manager: Dial
                         print(err)
                         await session.set_active(user.user_id, 0)
             else:
-                for user in users:
+                try:
+                    await bot.send_message(
+                        chat_id=config.bot.chat_id,
+                        text=text,
+                        reply_markup=InlineKeyboardMarkup(inline_keyboard=[keyboard]) if keyboard else None
+                    )
+                except Exception:
+                    await clb.message.answer(
+                        'Во время отправки сообщения что-то пошло не так, пожалуйста попробуйте снова')
+                    dialog_manager.dialog_data.clear()
+                    await dialog_manager.switch_to(adminSG.choose_malling)
+                    return
+        elif dialog_manager.dialog_data.get('caption'):
+            caption: str = dialog_manager.dialog_data.get('caption')
+            if dialog_manager.dialog_data.get('photo'):
+                if not is_chat:
+                    for user in users:
+                        try:
+                            await bot.send_photo(
+                                chat_id=user.user_id,
+                                photo=dialog_manager.dialog_data.get('photo'),
+                                caption=caption.format(name=user.name),
+                                reply_markup=InlineKeyboardMarkup(inline_keyboard=[keyboard]) if keyboard else None
+                            )
+                            if user.active == 0:
+                                await session.set_active(user.user_id, 1)
+                        except Exception as err:
+                            print(err)
+                            await session.set_active(user.user_id, 0)
+                else:
                     try:
-                        await bot.send_video(
-                            chat_id=user.user_id,
-                            video=dialog_manager.dialog_data.get('video'),
-                            caption=caption.format(name=user.name),
+                        await bot.send_photo(
+                            chat_id=config.bot.chat_id,
+                            photo=dialog_manager.dialog_data.get('photo'),
+                            caption=caption,
                             reply_markup=InlineKeyboardMarkup(inline_keyboard=[keyboard]) if keyboard else None
                         )
-                        if user.active == 0:
-                            await session.set_active(user.user_id, 1)
-                    except Exception as err:
-                        print(err)
-                        await session.set_active(user.user_id, 0)
+                    except Exception:
+                        await clb.message.answer('Во время отправки сообщения что-то пошло не так, пожалуйста попробуйте снова')
+                        dialog_manager.dialog_data.clear()
+                        await dialog_manager.switch_to(adminSG.choose_malling)
+                        return
+            else:
+                if not is_chat:
+                    for user in users:
+                        try:
+                            await bot.send_video(
+                                chat_id=user.user_id,
+                                video=dialog_manager.dialog_data.get('video'),
+                                caption=caption.format(name=user.name),
+                                reply_markup=InlineKeyboardMarkup(inline_keyboard=[keyboard]) if keyboard else None
+                            )
+                            if user.active == 0:
+                                await session.set_active(user.user_id, 1)
+                        except Exception as err:
+                            print(err)
+                            await session.set_active(user.user_id, 0)
+                else:
+                    try:
+                        await bot.send_video(
+                            chat_id=config.bot.chat_id,
+                            video=dialog_manager.dialog_data.get('video'),
+                            caption=caption,
+                            reply_markup=InlineKeyboardMarkup(inline_keyboard=[keyboard]) if keyboard else None
+                        )
+                    except Exception:
+                        await clb.message.answer('Во время отправки сообщения что-то пошло не так, пожалуйста попробуйте снова')
+                        dialog_manager.dialog_data.clear()
+                        await dialog_manager.switch_to(adminSG.choose_malling)
+                        return
+
     else:
         date = datetime.datetime.strptime(time, '%H:%M %d.%m')
         date = date.replace(year=datetime.datetime.today().year)
@@ -242,7 +294,8 @@ async def start_malling(clb: CallbackQuery, widget: Button, dialog_manager: Dial
                 'text': dialog_manager.dialog_data.get('text'),
                 'caption': dialog_manager.dialog_data.get('caption'),
                 'photo': dialog_manager.dialog_data.get('photo'),
-                'video': dialog_manager.dialog_data.get('video')
+                'video': dialog_manager.dialog_data.get('video'),
+                'chat': dialog_manager.dialog_data.get('chat')
             },
             next_run_time=date
         )
