@@ -90,7 +90,7 @@ async def add_profit(msg: Message, session: DataInteraction):
 @user_router.message(Command('top'), F.chat.id == config.bot.chat_id)
 async def show_user_top(msg: Message, session: DataInteraction):
     top = '🏆Топ воркеров за все время:\n'
-    profits = await session.get_profits()
+    profits = list(await session.get_profits())
     user_top = {}
     for profit in profits:
         if profit.user_id not in user_top.keys():
@@ -103,7 +103,7 @@ async def show_user_top(msg: Message, session: DataInteraction):
             continue
         user_top[profit.user_id]['sum'] += profit.amount
         user_top[profit.user_id]['profits'] += 1
-    user_top = sorted(user_top.items(), key=lambda x: x['sum'], reverse=True)
+    user_top = sorted(user_top.items(), key=lambda x: x[1]['sum'], reverse=True)[0:50:]
     counter = 1
     places = {
         1: '🥇',
@@ -112,5 +112,7 @@ async def show_user_top(msg: Message, session: DataInteraction):
     }
     for user in user_top:
         top += (f'<b>{counter if counter not in [1, 2, 3] else places[counter]}.</b> {user[1]["name"]}:'
-                f' - <b>{user[1]["sum"]} $</b> - {user[1]["profits"]} профитов\n')
+                f' - <b>{user[1]["sum"]} $</b> - <b>{user[1]["profits"]}</b> профитов\n')
+        counter += 1
+    await msg.answer(top)
 

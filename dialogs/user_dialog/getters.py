@@ -64,7 +64,7 @@ async def workers_getter(event_from_user: User, dialog_manager: DialogManager, *
     }
     for user in user_top:
         top += (f'<b>{counter if counter not in [1, 2, 3] else places[counter]}.</b> {user[1]["name"]}:'
-                f' - <b>{user[1]["sum"]} $</b> - {user[1]["profits"]} профитов\n')
+                f' - <b>{user[1]["sum"]} $</b> - <b>{user[1]["profits"]}</b> профитов\n')
         counter += 1
     return {
         'period': 'все время' if select == 'whole' else 'неделю' if select == 'week' else 'сегодня',
