@@ -25,10 +25,17 @@ class NatsConfig:
 
 
 @dataclass
+class UserBot:
+    api_id: int
+    api_hash: str
+
+
+@dataclass
 class Config:
     bot: tg_bot
     db: DB
     nats: NatsConfig
+    user_bot: UserBot
 
 
 def load_config(path: str | None = None) -> Config:
@@ -46,5 +53,9 @@ def load_config(path: str | None = None) -> Config:
         ),
         nats=NatsConfig(
             servers=env.list('nats')
+        ),
+        user_bot=UserBot(
+            api_id=int(env('api_id')),
+            api_hash=env('api_hash')
         )
     )
