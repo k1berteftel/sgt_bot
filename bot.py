@@ -5,6 +5,7 @@ import inspect
 import pytz
 import datetime
 
+from pyrogram import Client
 from aiogram import Bot, Dispatcher
 from aiogram_dialog import setup_dialogs
 from aiogram.client.default import DefaultBotProperties
@@ -45,9 +46,23 @@ logger = logging.getLogger(__name__)
 
 config: Config = load_config()
 
+database = PostgresBuild(config.db.dns)
+
+
+async def on_startup():
+    session = database.session()
+    db = DataInteraction(session)
+    await collect_users_profits(
+        bot=Client(
+            name='user_account',
+            api_id=config.user_bot.api_id,
+            api_hash=config.user_bot.api_hash
+        ),
+        session=db
+    )  # убрать после первого использования
+
 
 async def main():
-    database = PostgresBuild(config.db.dns)
     #await database.drop_tables(Base)
     await database.create_tables(Base)
     session = database.session()
@@ -61,11 +76,12 @@ async def main():
     nc, js = await connect_to_nats(servers=config.nats.servers)
     #storage: NatsStorage = await NatsStorage(nc=nc, js=js).create_storage()
 
-    await start_schedulers(scheduler,db)
-    await collect_users_profits(db)  # убрать после первого использования
+    await start_schedulers(scheduler, db)
 
     bot = Bot(token=config.bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()#storage=storage)
+
+    dp.startup.register(on_startup)  # убрать после первого использования
 
     # подключаем роутеры
     dp.include_routers(user_router, *get_dialogs())
