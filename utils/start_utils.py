@@ -28,7 +28,7 @@ async def start_schedulers(scheduler: AsyncIOScheduler, session: DataInteraction
         'cron',
         args=[session],
         hour=0,
-        minutes=0
+        minute=0
     )
     scheduler.add_job(
         wrapper_week,
