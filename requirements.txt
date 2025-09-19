@@ -10,4 +10,5 @@ greenlet
 pydantic
 SQLAlchemy
 pytz
+kurigram
 

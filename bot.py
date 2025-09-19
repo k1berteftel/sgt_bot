@@ -11,10 +11,13 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from utils.top_utils import collect_users_profits
+from utils.start_utils import start_schedulers
 from storage.nats_storage import NatsStorage
 from utils.nats_connect import connect_to_nats
 from database.build import PostgresBuild
 from database.model import Base
+from database.action_data_class import configurate_tables, DataInteraction
 from config_data.config import load_config, Config
 from handlers.user_handlers import user_router
 from dialogs import get_dialogs
@@ -46,14 +49,19 @@ config: Config = load_config()
 async def main():
     database = PostgresBuild(config.db.dns)
     #await database.drop_tables(Base)
-    #await database.create_tables(Base)
+    await database.create_tables(Base)
     session = database.session()
+
+    await configurate_tables(session)
 
     scheduler: AsyncIOScheduler = AsyncIOScheduler()
     scheduler.start()
 
     nc, js = await connect_to_nats(servers=config.nats.servers)
     #storage: NatsStorage = await NatsStorage(nc=nc, js=js).create_storage()
+
+    await start_schedulers(scheduler, DataInteraction(session))
+    await collect_users_profits(DataInteraction(session))  # убрать после первого использования
 
     bot = Bot(token=config.bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()#storage=storage)

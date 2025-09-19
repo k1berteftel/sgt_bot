@@ -283,7 +283,6 @@ async def start_malling(clb: CallbackQuery, widget: Button, dialog_manager: Dial
                         dialog_manager.dialog_data.clear()
                         await dialog_manager.switch_to(adminSG.choose_malling)
                         return
-
     else:
         date = datetime.datetime.strptime(time, '%H:%M %d.%m')
         date = date.replace(year=datetime.datetime.today().year)

@@ -1,19 +1,24 @@
 from aiogram import Router, F, Bot
-from aiogram.filters import CommandStart, CommandObject, IS_MEMBER, IS_NOT_MEMBER, ChatMemberUpdatedFilter
+from aiogram.filters import CommandStart, CommandObject, Command, IS_MEMBER, IS_NOT_MEMBER, ChatMemberUpdatedFilter
 from aiogram.types import Message, CallbackQuery, ChatMemberUpdated
 from aiogram_dialog import DialogManager, StartMode
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from config_data.config import Config, load_config
+from utils.top_utils import collect_user_profits
 from utils.search_utils import parse_entities
 from utils.rates import get_usdt_eur
 from database.action_data_class import DataInteraction
 from states.state_groups import startSG, RegistrationSG
 
 
+config: Config = load_config()
 user_router = Router()
 
 
 @user_router.message(CommandStart())
-async def start_dialog(msg: Message, dialog_manager: DialogManager, session: DataInteraction, command: CommandObject):
+async def start_dialog(msg: Message, dialog_manager: DialogManager, session: DataInteraction,
+                       scheduler: AsyncIOScheduler, command: CommandObject):
     args = command.args
     #referral = None
     if args:
@@ -36,6 +41,13 @@ async def start_dialog(msg: Message, dialog_manager: DialogManager, session: Dat
             #except Exception as err:
                 #print(err)
     if not await session.check_user(msg.from_user.id):
+        job_id = f'collect_{msg.from_user.id}'
+        scheduler.add_job(
+            collect_user_profits,
+            'cron',
+            args=[msg.from_user.id, session, scheduler],
+            id=job_id
+        )
         await dialog_manager.start(RegistrationSG.greeting, mode=StartMode.RESET_STACK)
         return
     if dialog_manager.has_context():
@@ -73,3 +85,32 @@ async def add_profit(msg: Message, session: DataInteraction):
             eur_usdt = await get_usdt_eur()
             amount = round(int(amount) / eur_usdt)
         await session.add_profit(user.user_id, amount)
+
+
+@user_router.message(Command('top'), F.chat.id == config.bot.chat_id)
+async def show_user_top(msg: Message, session: DataInteraction):
+    top = '🏆Топ воркеров за все время:\n'
+    profits = await session.get_profits()
+    user_top = {}
+    for profit in profits:
+        if profit.user_id not in user_top.keys():
+            user = await session.get_user(profit.user_id)
+            user_top[profit.user_id] = {
+                'name': user.name,
+                'sum': profit.amount,
+                'profits': 1
+            }
+            continue
+        user_top[profit.user_id]['sum'] += profit.amount
+        user_top[profit.user_id]['profits'] += 1
+    user_top = sorted(user_top.items(), key=lambda x: x['sum'], reverse=True)
+    counter = 1
+    places = {
+        1: '🥇',
+        2: '🥈',
+        3: '🥉'
+    }
+    for user in user_top:
+        top += (f'<b>{counter if counter not in [1, 2, 3] else places[counter]}.</b> {user[1]["name"]}:'
+                f' - <b>{user[1]["sum"]} $</b> - {user[1]["profits"]} профитов\n')
+

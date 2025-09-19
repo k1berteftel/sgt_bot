@@ -59,3 +59,13 @@ class OneTimeLinksIdsTable(Base):
 
     link: Mapped[str] = mapped_column(VARCHAR)
 
+
+class ProfitStatTable(Base):
+    __tablename__ = 'profits-stat'
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+
+    all: Mapped[int] = mapped_column(BigInteger, default=0)
+    today: Mapped[int] = mapped_column(Integer, default=0)
+    week: Mapped[int] = mapped_column(Integer, default=0)
+

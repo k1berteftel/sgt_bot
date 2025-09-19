@@ -3,7 +3,14 @@ import datetime
 from sqlalchemy import select, insert, update, column, text, delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from database.model import (UsersTable, DeeplinksTable, OneTimeLinksIdsTable, AdminsTable, ProfitsTable)
+from database.model import (UsersTable, DeeplinksTable, OneTimeLinksIdsTable, AdminsTable, ProfitsTable,
+                            ProfitStatTable)
+
+
+async def configurate_tables(sessions: async_sessionmaker):
+    async with sessions() as session:
+        if not await session.scalar(select(ProfitStatTable)):
+            await session.execute(insert(ProfitsTable))
 
 
 class DataInteraction():
@@ -22,6 +29,8 @@ class DataInteraction():
                 amount=amount
             ))
             await session.commit()
+        for period in ['all', 'today', 'week']:
+            await self.update_profit_stat(period, amount)
 
     async def add_user(self, user_id: int, username: str, name: str):
         if await self.check_user(user_id):
@@ -104,6 +113,13 @@ class DataInteraction():
             result = await session.scalars(select(DeeplinksTable))
         return result.fetchall()
 
+    async def update_profit_stat(self, column: str, value):
+        async with self._sessions() as session:
+            await session.execute(update(ProfitStatTable).values({
+                column: getattr(ProfitStatTable, column) + value}
+            ))
+            await session.commit()
+
     async def set_activity(self, user_id: int):
         async with self._sessions() as session:
             await session.execute(update(UsersTable).where(UsersTable.user_id == user_id).values(
@@ -115,6 +131,13 @@ class DataInteraction():
         async with self._sessions() as session:
             await session.execute(update(UsersTable).where(UsersTable.user_id == user_id).values(
                 active=active
+            ))
+            await session.commit()
+
+    async def set_profit_stat(self, **kwargs):
+        async with self._sessions() as session:
+            await session.execute(update(ProfitStatTable).values(
+                kwargs
             ))
             await session.commit()
 
