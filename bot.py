@@ -51,6 +51,7 @@ async def main():
     #await database.drop_tables(Base)
     await database.create_tables(Base)
     session = database.session()
+    db = DataInteraction(session)
 
     await configurate_tables(session)
 
@@ -60,8 +61,8 @@ async def main():
     nc, js = await connect_to_nats(servers=config.nats.servers)
     #storage: NatsStorage = await NatsStorage(nc=nc, js=js).create_storage()
 
-    await start_schedulers(scheduler, DataInteraction(session))
-    await collect_users_profits(DataInteraction(session))  # убрать после первого использования
+    await start_schedulers(scheduler,db)
+    await collect_users_profits(db)  # убрать после первого использования
 
     bot = Bot(token=config.bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()#storage=storage)
