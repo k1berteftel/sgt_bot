@@ -39,10 +39,10 @@ async def workers_getter(event_from_user: User, dialog_manager: DialogManager, *
     top = ''
     profits = list(await session.get_profits())
     period = None if select == 'whole' else 7 if select == 'week' else 1
-    profits: list[ProfitsTable] = filter(
+    profits: list[ProfitsTable] = list(filter(
         lambda x: not period or x.create > datetime.datetime.now() - datetime.timedelta(days=period),
         profits
-    )
+    ))
     user_top = {}
     for profit in profits:
         if profit.user_id not in user_top.keys():
@@ -55,7 +55,7 @@ async def workers_getter(event_from_user: User, dialog_manager: DialogManager, *
             continue
         user_top[profit.user_id]['sum'] += profit.amount
         user_top[profit.user_id]['profits'] += 1
-    user_top = sorted(user_top.items(), key=lambda x: x['sum'], reverse=True)
+    user_top = sorted(user_top.items(), key=lambda x: x[1]['sum'], reverse=True)
     counter = 1
     places = {
         1: '🥇',
