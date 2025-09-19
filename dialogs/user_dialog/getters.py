@@ -55,7 +55,7 @@ async def workers_getter(event_from_user: User, dialog_manager: DialogManager, *
             continue
         user_top[profit.user_id]['sum'] += profit.amount
         user_top[profit.user_id]['profits'] += 1
-    user_top = sorted(user_top.items(), key=lambda x: x[1]['sum'], reverse=True)
+    user_top = sorted(user_top.items(), key=lambda x: x[1]['sum'], reverse=True)[0:50:]
     counter = 1
     places = {
         1: '🥇',
