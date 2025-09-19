@@ -16,7 +16,7 @@ config: Config = load_config()
 user_router = Router()
 
 
-@user_router.message(CommandStart())
+@user_router.message(CommandStart(), F.chat.type == "private")
 async def start_dialog(msg: Message, dialog_manager: DialogManager, session: DataInteraction,
                        scheduler: AsyncIOScheduler, command: CommandObject):
     args = command.args
@@ -89,7 +89,7 @@ async def add_profit(msg: Message, session: DataInteraction):
 
 @user_router.message(Command('top'), F.chat.id == config.bot.chat_id)
 async def show_user_top(msg: Message, session: DataInteraction):
-    top = '🏆Топ воркеров за все время:\n'
+    top = '<b>🏆Топ воркеров за все время:</b>\n'
     profits = list(await session.get_profits())
     user_top = {}
     for profit in profits:
