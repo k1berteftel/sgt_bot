@@ -43,12 +43,13 @@ async def get_static(clb: CallbackQuery, widget: Button, dialog_manager: DialogM
                     entry['2_day_ago'] = entry.get('2_day_ago') + 1
         if user.activity.timestamp() > (datetime.datetime.today() - datetime.timedelta(days=1)).timestamp():
             activity += 1
-
+    stats = await session.get_profit_stat()
     text = (f'<b>Статистика на {datetime.datetime.today().strftime("%d-%m-%Y")}</b>\n\nВсего пользователей: {len(users)}'
             f'\n - Активные пользователи(не заблокировали бота): {active}\n - Пользователей заблокировали '
             f'бота: {len(users) - active}\n - Провзаимодействовали с ботом за последние 24 часа: {activity}\n\n'
             f'<b>Прирост аудитории:</b>\n - За сегодня: +{entry.get("today")}\n - Вчера: +{entry.get("yesterday")}'
-            f'\n - Позавчера: + {entry.get("2_day_ago")}')
+            f'\n - Позавчера: + {entry.get("2_day_ago")}\n\n<b>Профиты</b>\n - За все время: {stats.all}\n - '
+            f'За неделю: {stats.week}\n - За сегодня: {stats.today}')
     await clb.message.answer(text=text)
 
 
