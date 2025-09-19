@@ -10,7 +10,10 @@ from database.model import (UsersTable, DeeplinksTable, OneTimeLinksIdsTable, Ad
 async def configurate_tables(sessions: async_sessionmaker):
     async with sessions() as session:
         if not await session.scalar(select(ProfitStatTable)):
-            await session.execute(insert(ProfitStatTable))
+            await session.execute(insert(ProfitStatTable).values(
+
+            ))
+            await session.commit()
 
 
 class DataInteraction():
