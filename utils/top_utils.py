@@ -9,10 +9,12 @@ from database.action_data_class import DataInteraction
 
 config: Config = load_config()
 chat_id = -1002373388765
+api_id = config.user_bot.api_id
+api_hash = config.user_bot.api_hash
 
 
 async def collect_user_profits(user_id: int, session: DataInteraction, scheduler: AsyncIOScheduler):
-    bot = Client(name='profit_collector', bot_token=config.bot.token)
+    bot = Client(name='profit_collector', bot_token=config.bot.token, api_id=api_id, api_hash=api_hash)
     user = await session.get_user(user_id)
 
     await bot.start()
