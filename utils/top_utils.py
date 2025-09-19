@@ -17,7 +17,7 @@ async def collect_user_profits(user_id: int, session: DataInteraction, scheduler
     bot = Client(name='profit_collector', bot_token=config.bot.token, api_id=api_id, api_hash=api_hash)
     user = await session.get_user(user_id)
 
-    await bot.start()
+    await bot.run()
     async for msg in bot.get_chat_history(chat_id):
         text = msg.caption
         if not text:
