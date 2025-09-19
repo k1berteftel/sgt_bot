@@ -10,7 +10,7 @@ from database.model import (UsersTable, DeeplinksTable, OneTimeLinksIdsTable, Ad
 async def configurate_tables(sessions: async_sessionmaker):
     async with sessions() as session:
         if not await session.scalar(select(ProfitStatTable)):
-            await session.execute(insert(ProfitsTable))
+            await session.execute(insert(ProfitStatTable))
 
 
 class DataInteraction():
@@ -85,6 +85,11 @@ class DataInteraction():
     async def get_user_by_username(self, username: str):
         async with self._sessions() as session:
             result = await session.scalar(select(UsersTable).where(UsersTable.username == username))
+        return result
+
+    async def get_profit_stat(self):
+        async with self._sessions() as session:
+            result = await session.scalar(select(ProfitStatTable))
         return result
 
     async def get_profits(self):
