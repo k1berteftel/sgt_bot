@@ -81,7 +81,7 @@ async def main():
     bot = Bot(token=config.bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()#storage=storage)
 
-    dp.startup.register(on_startup)  # убрать после первого использования
+    #dp.startup.register(on_startup)  # убрать после первого использования
 
     # подключаем роутеры
     dp.include_routers(user_router, *get_dialogs())
