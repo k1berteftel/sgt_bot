@@ -20,10 +20,10 @@ class DataInteraction():
     def __init__(self, session: async_sessionmaker):
         self._sessions = session
 
-    async def check_user(self, user_id: int) -> bool:
+    async def check_user(self, user_id: int) -> UsersTable | bool:
         async with self._sessions() as session:
             result = await session.scalar(select(UsersTable).where(UsersTable.user_id == user_id))
-        return True if result else False
+        return result if result else False
 
     async def add_profit(self, user_id: int, amount: int):
         async with self._sessions() as session:
@@ -125,6 +125,13 @@ class DataInteraction():
         async with self._sessions() as session:
             await session.execute(update(ProfitStatTable).values({
                 column: getattr(ProfitStatTable, column) + value}
+            ))
+            await session.commit()
+
+    async def update_user_username(self, user_id: int, username: str):
+        async with self._sessions() as session:
+            await session.execute(update(UsersTable).where(UsersTable.user_id == user_id).values(
+                username=username
             ))
             await session.commit()
 

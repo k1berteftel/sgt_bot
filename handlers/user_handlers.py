@@ -40,7 +40,8 @@ async def start_dialog(msg: Message, dialog_manager: DialogManager, session: Dat
                     #await session.add_refs(args)
             #except Exception as err:
                 #print(err)
-    if not await session.check_user(msg.from_user.id):
+    user = await session.check_user(msg.from_user.id)
+    if not user:
         job_id = f'collect_{msg.from_user.id}'
         scheduler.add_job(
             collect_user_profits,
@@ -50,6 +51,9 @@ async def start_dialog(msg: Message, dialog_manager: DialogManager, session: Dat
         )
         await dialog_manager.start(RegistrationSG.greeting, mode=StartMode.RESET_STACK)
         return
+    else:
+        if user.username != msg.from_user.username:
+            await session.update_user_username(msg.from_user.id, msg.from_user.username)
     if dialog_manager.has_context():
         await dialog_manager.done()
         try:
@@ -95,8 +99,6 @@ async def show_user_top(msg: Message, session: DataInteraction):
     for profit in profits:
         if profit.user_id not in user_top.keys():
             user = await session.get_user(profit.user_id)
-            if not user:
-                continue
             user_top[profit.user_id] = {
                 'name': user.name if user.name else '-',
                 'sum': profit.amount,
