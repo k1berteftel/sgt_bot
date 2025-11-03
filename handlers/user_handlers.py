@@ -116,5 +116,7 @@ async def show_user_top(msg: Message, session: DataInteraction):
         top += (f'<b>{counter if counter not in [1, 2, 3] else places[counter]}.</b> {user[1]["name"]}:'
                 f' - <b>{user[1]["sum"]} $</b> - <b>{user[1]["profits"]}</b> профитов\n')
         counter += 1
+    stats = await session.get_profit_stat()
+    top += f'\n<b>💰Сумма профитов за все время: {stats.all} $</b>'
     await msg.answer(top)
 
