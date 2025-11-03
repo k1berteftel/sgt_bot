@@ -52,6 +52,7 @@ database = PostgresBuild(config.db.dns)
 async def on_startup():
     session = database.session()
     db = DataInteraction(session)
+    await db.clean_users_profits()
     await collect_users_profits(
         bot=Client(
             name='user_account',

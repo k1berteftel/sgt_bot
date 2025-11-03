@@ -149,6 +149,15 @@ class DataInteraction():
             ))
             await session.commit()
 
+    async def clean_users_profits(self):
+        async with self._sessions() as session:
+            await session.execute(delete(ProfitsTable))
+            for period in ['all', 'today', 'week']:
+                await session.execute(update(ProfitStatTable).values({
+                    period: 0}
+                ))
+            await session.commit()
+
     async def del_deeplink(self, link: str):
         async with self._sessions() as session:
             await session.execute(delete(DeeplinksTable).where(DeeplinksTable.link == link))
