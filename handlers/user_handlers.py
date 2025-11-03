@@ -95,8 +95,10 @@ async def show_user_top(msg: Message, session: DataInteraction):
     for profit in profits:
         if profit.user_id not in user_top.keys():
             user = await session.get_user(profit.user_id)
+            if not user:
+                continue
             user_top[profit.user_id] = {
-                'name': user.name,
+                'name': user.name if user.name else '-',
                 'sum': profit.amount,
                 'profits': 1
             }
