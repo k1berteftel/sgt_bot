@@ -19,6 +19,8 @@ async def collect_user_profits(user_id: int, session: DataInteraction, scheduler
         api_id=config.user_bot.api_id,
         api_hash=config.user_bot.api_hash
     )
+    if bot.is_connected:
+        return
     user = await session.get_user(user_id)
     async with bot:
         async for msg in bot.get_chat_history(chat_id):

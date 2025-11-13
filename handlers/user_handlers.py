@@ -47,7 +47,8 @@ async def start_dialog(msg: Message, dialog_manager: DialogManager, session: Dat
             collect_user_profits,
             'cron',
             args=[msg.from_user.id, session, scheduler],
-            id=job_id
+            id=job_id,
+            minutes=2
         )
         await dialog_manager.start(RegistrationSG.greeting, mode=StartMode.RESET_STACK)
         return
